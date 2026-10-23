@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0F1216"/>
+<meta name="description" content="颈椎守护网页版：用浏览器摄像头实时估算 CVA 颈颅角、头前倾角与颈椎等效负荷。画面只在浏览器本地处理，不上传。"/>
+<title>颈椎守护 · 网页版</title>
+<link rel="icon" type="image/png" href="assets/icon-512.png"/>
+<link rel="apple-touch-icon" href="assets/icon-512.png"/>
+<link rel="stylesheet" href="css/app.css"/>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ════════════════ 顶栏：品牌 + 状态胶囊 + 操作 ════════════════ -->
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-icon" src="assets/icon-512.png" alt="颈椎守护"/>
+      <div class="brand-text">
+        <strong>颈椎守护</strong>
+        <span>网页版 · 浏览器本机推理</span>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <div class="status-pill" id="statusPill" data-state="none" role="status" aria-live="polite">
+        <i class="dot" aria-hidden="true"></i>
+        <span id="statusText">未检出</span>
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" title="切换主题（跟随系统 / 浅色 / 深色）" aria-label="切换主题">
+        <span id="themeIcon">🌓</span>
+      </button>
+      <button class="icon-btn" id="settingsBtn" type="button" title="设置" aria-label="设置">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="privacyBtn" type="button" title="隐私说明" aria-label="隐私说明">?</button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- ════════════════ 左：摄像头画面 + 关键点标注 ════════════════ -->
+    <section class="stage-card" aria-label="摄像头画面">
+      <div class="stage" id="stage">
+        <video id="video" playsinline muted autoplay></video>
+        <canvas id="overlay"></canvas>
+
+        <!-- 未开启：开始按钮与说明 -->
+        <div class="stage-empty" id="stageEmpty">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.2l1-1.6h6.6l1 1.6h1.2A2.5 2.5 0 0 1 19 8.5v8A2.5 2.5 0 0 1 16.5 19h-11A2.5 2.5 0 0 1 3 16.5z"/>
+              <circle cx="11" cy="12.5" r="3.4"/>
+            </svg>
+          </div>
+          <h2>把镜头对准侧脸和肩膀</h2>
+          <p>手机侧放或斜 45°。正对镜头时测不出头前倾，会显示「角度不可信」。</p>
+          <div class="empty-actions">
+            <button class="btn primary" id="startBtn" type="button">开启摄像头</button>
+            <button class="btn ghost" id="demoBtn" type="button">先看演示</button>
+          </div>
+          <p class="secure-hint" id="secureHint"></p>
+        </div>
+
+        <!-- 画面上的小徽标 -->
+        <div class="demo-badge" id="demoBadge" hidden>演示模式 · 合成画面，不计入统计</div>
+        <div class="stage-chips">
+          <span class="chip" id="viewChip">视角 --</span>
+          <span class="chip" id="fpsChip">-- fps</span>
+        </div>
+
+        <!-- 底部读数条（对齐 Android 版 LandmarkOverlayView） -->
+        <div class="stage-readout" id="stageReadout">
+          <span class="ro-item" id="roCva">CVA --</span>
+          <span class="ro-item" id="roTheta">θ --</span>
+          <span class="ro-item" id="roView">视角 --</span>
+        </div>
+      </div>
+
+      <!-- 画面下方控制条 -->
+      <div class="stage-controls">
+        <span class="cam-state" id="camState">摄像头未开启</span>
+        <div class="ctrl-btns">
+          <button class="btn small ghost" id="switchCamBtn" type="button" title="切换前置 / 后置摄像头">切换镜头</button>
+          <button class="btn small ghost" id="demoToggleBtn" type="button">演示</button>
+          <button class="btn small danger-ghost" id="stopBtn" type="button" disabled>停止</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ 右：三个实时读数 + 今日统计 ════════════════ -->
+    <aside class="side" aria-label="实时读数与今日统计">
+
+      <div class="readings">
+        <!-- CVA 颈颅角：越大越好 -->
+        <article class="reading" id="cvaCard" data-state="none">
+          <div class="reading-head">
+            <span class="reading-label">CVA 颈颅角</span>
+            <span class="reading-tag">越大越好</span>
+          </div>
+          <div class="reading-value"><b id="cvaValue">--</b><small>°</small></div>
+          <div class="reading-hint" id="cvaHint">安全 ≥ 75°</div>
+        </article>
+
+        <!-- 头前倾角 θ：越小越好 -->
+        <article class="reading" id="thetaCard" data-state="none">
+          <div class="reading-head">
+            <span class="reading-label">头前倾角 θ</span>
+            <span class="reading-tag">越小越好</span>
+          </div>
+          <div class="reading-value"><b id="thetaValue">--</b><small>°</small></div>
+          <div class="reading-hint" id="thetaHint">安全 &lt; 15°</div>
+        </article>
+
+        <!-- 等效负荷：越低越好 -->
+        <article class="reading" id="loadCard" data-state="none">
+          <div class="reading-head">
+            <span class="reading-label">颈椎等效负荷</span>
+            <span class="reading-tag">Hansraj</span>
+          </div>
+          <div class="reading-value"><b id="loadValue">--</b><small>kg</small></div>
+          <div class="reading-hint" id="loadHint">安全 &lt; 12 kg</div>
+        </article>
+      </div>
+
+      <!-- 今日统计 -->
+      <section class="card today-card">
+        <div class="card-head">
+          <h2>今日统计</h2>
+          <span class="muted" id="todayDate"></span>
+        </div>
+
+        <div class="score-row">
+          <div class="score-box">
+            <span class="score-num" id="todayScore">--</span>
+            <span class="score-grade" id="todayGrade">数据不足</span>
+          </div>
+          <div class="score-meta">
+            <div class="srow"><i class="dot safe"></i><span>安全</span><b id="todaySafe">0 秒</b></div>
+            <div class="srow"><i class="dot warn"></i><span>注意</span><b id="todayWarn">0 秒</b></div>
+            <div class="srow"><i class="dot danger"></i><span>危险</span><b id="todayDanger">0 秒</b></div>
+          </div>
+        </div>
+
+        <div class="today-foot">
+          <span id="todayTotal">守护 0 分钟</span>
+          <span id="todayUnreliable">角度不可信 0 秒</span>
+          <span id="todayAlerts">提醒 0 次</span>
+        </div>
+      </section>
+
+      <!-- 三级分布 + 近 7 天 -->
+      <section class="card dist-card">
+        <div class="card-head">
+          <h2>三级分布</h2>
+          <span class="muted">仅统计角度可信的时间</span>
+        </div>
+
+        <div class="dist-bar" id="distBar" role="img" aria-label="安全 / 注意 / 危险时间占比">
+          <span class="seg safe" id="distSafe" style="width:0%"></span>
+          <span class="seg warn" id="distWarn" style="width:0%"></span>
+          <span class="seg danger" id="distDanger" style="width:0%"></span>
+        </div>
+        <div class="dist-legend">
+          <span><i class="dot safe"></i>安全 <b id="distSafeText">0%</b></span>
+          <span><i class="dot warn"></i>注意 <b id="distWarnText">0%</b></span>
+          <span><i class="dot danger"></i>危险 <b id="distDangerText">0%</b></span>
+          <span class="muted" id="distEmpty">暂无数据</span>
+        </div>
+
+        <h3 class="sub-title">近 7 天</h3>
+        <div class="week-chart" id="weekChart" aria-label="近 7 天坐姿分布柱状图"></div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- ════════════════ 下方：使用指引 + 已知限制 ════════════════ -->
+  <div class="lower">
+
+    <section class="card guide-card">
+      <div class="card-head">
+        <h2>怎么用才准</h2>
+        <span class="muted">30 秒自测</span>
+      </div>
+      <ol class="guide-list">
+        <li><b>镜头与肩同高</b>，能同时拍到<b>侧脸 + 肩膀</b>；手机侧放或与视线斜 45°。</li>
+        <li>看右上角<b>「视角」</b>：0° 最准，30° 以内可用，<b>&gt;50° 会显示角度不可信</b>，此时请转身。</li>
+        <li>挺直坐 10 秒，CVA 应 <b>≥ 75°</b>、负荷 <b>≈ 5~8 kg</b>；低头看手机，CVA 下降、θ 上升、负荷上升。</li>
+        <li>戴头戴式耳机时耳点会抖，程序自动改用<b>「鼻—肩」降级测量</b>（读数条标「鼻测」）。</li>
+        <li>光线充足、背景别太乱；<b>实测帧率</b>显示在画面右上角。</li>
+      </ol>
+      <p class="disclaimer">
+        健康提醒，<b>非医疗诊断</b>。角度为摄像头估算值，个体差异、镜头高度都会影响读数，请关注自己的变化趋势，而不是绝对数字。
+      </p>
+    </section>
+
+    <section class="card limits-card">
+      <div class="card-head">
+        <h2>已知限制</h2>
+        <span class="muted">如实说明</span>
+      </div>
+      <ul class="limits-list">
+        <li><b>不是后台守护。</b>浏览器标签页切到后台会暂停检测，回来续上；Android 版能锁屏常驻，网页版做不到。</li>
+        <li><b>必须 localhost 或 https。</b>直接双击 index.html、手机走局域网 http://192.168.x.x 都拿不到摄像头。</li>
+        <li><b>帧率因设备而异。</b>桌面独显/核显通常更流畅，手机与 CPU 推理更慢；以画面右上角的实测值为准，这里不写「流畅」。</li>
+        <li><b>视角 &gt; 50° 时数值不可信</b>，程序会标红并停止计入统计——正对镜头测不出头前倾。</li>
+        <li><b>功能比 App 少。</b>网页版没有放松操、成长积分/衣橱、CSV 导出；这些在 Android 版里。</li>
+        <li><b>非医疗诊断。</b>只是提醒工具，不能替代医生。</li>
+      </ul>
+    </section>
+  </div>
+
+  <footer class="footer">
+    <span>画面只在浏览器本地处理，<b>不上传、无账号、无追踪</b>。统计只存在本机 localStorage。</span>
+    <span class="footer-links">
+      <a href="privacy.html" target="_blank" rel="noopener">隐私政策</a>
+      <a href="../docs/index.html">Android 版</a>
+      <a href="#" id="footerPrivacy">隐私说明</a>
+    </span>
+  </footer>
+</div>
+
+<!-- ════════════════ 提醒横幅 ════════════════ -->
+<div class="alert-banner" id="alertBanner" hidden role="alert">
+  <div class="alert-icon" aria-hidden="true">!</div>
+  <div class="alert-body">
+    <strong>该抬头了</strong>
+    <span id="alertReason">持续低头时间过长</span>
+  </div>
+  <button class="btn small primary" id="alertOk" type="button">知道了</button>
+</div>
+
+<!-- ════════════════ 轻提示 ════════════════ -->
+<div class="toast" id="toast" hidden></div>
+
+<!-- ════════════════ 隐私说明（首次进入） ════════════════ -->
+<div class="modal" id="privacyModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+    <div class="modal-head">
+      <img src="assets/icon-512.png" alt="" width="44" height="44"/>
+      <div>
+        <h2 id="privacyTitle">开始前，先说清楚隐私</h2>
+        <p>这个网页版在浏览器里自己算，没有服务器。</p>
+      </div>
+    </div>
+    <ul class="privacy-list">
+      <li><b>画面只在本机处理。</b>摄像头帧只交给浏览器内的 MediaPipe 模型，不录制、不保存、不上传。</li>
+      <li><b>关键点不上传。</b>耳朵、鼻子、肩膀的坐标算完就丢，只把「安全 / 注意 / 危险」的秒数存进浏览器 localStorage。</li>
+      <li><b>不联网也能用。</b>首次加载需要下载 MediaPipe 的 JS/WASM（CDN）；模型默认用本地文件。下载的只有代码和模型，没有你的画面。</li>
+      <li><b>没有账号、没有追踪、没有广告。</b>统计可在设置里一键清除。</li>
+      <li><b>不构成医疗建议。</b>这是健康提醒工具，不能替代医生诊断。</li>
+    </ul>
+    <div class="modal-actions">
+      <a class="btn ghost" href="privacy.html" target="_blank" rel="noopener">完整隐私政策</a>
+      <button class="btn primary" id="privacyOk" type="button">我已知晓，开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ 设置 ════════════════ -->
+<div class="modal" id="settingsModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-head">
+      <div>
+        <h2 id="settingsTitle">设置</h2>
+        <p>修改后立即生效，保存在本机。</p>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+      <label class="field">
+        <span>「注意」阈值 <b id="warnLabel">15°</b></span>
+        <input type="range" id="warnRange" min="5" max="45" step="1" value="15"/>
+      </label>
+      <label class="field">
+        <span>「危险」阈值 <b id="dangerLabel">30°</b></span>
+        <input type="range" id="dangerRange" min="15" max="60" step="1" value="30"/>
+      </label>
+      <label class="field">
+        <span>连续低头多久提醒 <b id="holdLabel">180 秒</b></span>
+        <input type="range" id="holdRange" min="30" max="600" step="30" value="180"/>
+      </label>
+      <label class="field">
+        <span>推理帧率上限 <b id="fpsLabel">15 fps</b></span>
+        <input type="range" id="fpsRange" min="5" max="30" step="1" value="15"/>
+      </label>
+      <label class="field switch-field">
+        <span>提醒时播放提示音</span>
+        <input type="checkbox" id="soundToggle" checked/>
+      </label>
+      <label class="field switch-field">
+        <span>提醒时震动（手机支持时）</span>
+        <input type="checkbox" id="vibrateToggle" checked/>
+      </label>
+    </div>
+
+    <div class="run-info" id="runInfo">运行信息加载中…</div>
+
+    <div class="modal-actions wrap-actions">
+      <button class="btn small danger-ghost" id="clearToday" type="button">清除今日统计</button>
+      <button class="btn small danger-ghost" id="clearAll" type="button">清空全部本地数据</button>
+      <span class="grow"></span>
+      <button class="btn primary" id="settingsClose" type="button">完成</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/posture.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
+

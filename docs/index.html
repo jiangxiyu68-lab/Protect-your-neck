@@ -36,6 +36,19 @@ h1 { font-size: 2em; margin: 0 0 .2em; letter-spacing: .01em; }
 h2 { font-size: 1.28em; margin: 2.4em 0 .8em; }
 .shots { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
 .shots img { height: 380px; border-radius: 12px; box-shadow: 0 6px 20px #0002; }
+.try {
+  display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap;
+  margin: 40px 0 8px; padding: 22px 24px; border-radius: 18px;
+  background: linear-gradient(135deg, #2e7df61f, #2e7df60a);
+  border: 1px solid #2e7df655;
+}
+.try h2 { margin: 0 0 .35em; font-size: 1.18em; }
+.try p { margin: 0; font-size: .92em; color: #5c6875; max-width: 560px; }
+.try .btn { margin: 0; flex: none; }
+@media (prefers-color-scheme: dark) {
+  .try { background: linear-gradient(135deg, #2e7df62e, #2e7df60a); border-color: #2e7df666; }
+  .try p { color: #93a1b0; }
+}
 footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid #0002; font-size: .88em; color: #7b8794; }
 code { background: #8881; padding: .12em .36em; border-radius: 4px; font-size: .92em; }
 </style>
@@ -51,13 +64,23 @@ code { background: #8881; padding: .12em .36em; border-radius: 4px; font-size: .
       <span class="tag">Android 7.0+</span>
       <span class="tag">无网络权限</span>
       <span class="tag">无广告 · 无账号</span>
+      <span class="tag">网页版免安装</span>
     </div>
   </div>
 
   <p style="margin-top:28px">
     <a class="btn" href="https://github.com/USERNAME/cervical-guard/releases/latest">下载 APK</a>
+    <a class="btn ghost" href="../web/" data-web-link>网页版在线试用</a>
     <a class="btn ghost" href="privacy.html">隐私政策</a>
   </p>
+
+  <div class="try">
+    <div>
+      <h2>不想装 App？直接在浏览器里试</h2>
+      <p>网页版跑的是同一个算法：摄像头画面只在本机处理，实时算出 CVA 颈颅角、头前倾角与等效负荷，带三级判定、今日统计和近 7 天趋势。需要 Chrome / Edge，并且必须是 <code>https</code> 或 <code>localhost</code> 才能拿到摄像头。</p>
+    </div>
+    <a class="btn" href="../web/" data-web-link>打开网页版 →</a>
+  </div>
 
   <div class="grid">
     <div class="card"><h3>实时姿态检测</h3><p>MediaPipe 姿态模型本机推理，约 3 fps，估算 CVA 颈颅角与头前倾角。</p></div>
@@ -84,9 +107,30 @@ code { background: #8881; padding: .12em .36em; border-radius: 4px; font-size: .
 
   <footer>
     <strong>免责声明</strong>：本应用为健康提醒工具，<strong>非医疗诊断</strong>，不能替代专业医疗建议。<br/>
-    代码以 MIT 许可发布；第三方组件许可见 NOTICE.md。
+    代码以 MIT 许可发布；第三方组件许可见 NOTICE.md。<br/>
+    网页版与 Android 版都在本机完成姿态推理，画面不上传；网页版需要浏览器支持摄像头（https 或 localhost）。
   </footer>
 
 </div>
+<script>
+// 兼容两种 GitHub Pages 发布布局：
+//   A) Pages 源 = 仓库根 → docs/ 与 web/ 同级，落地页在 /docs/，../web/ 可用
+//   B) Pages 源 = /docs   → 需把 publish/web 复制成 docs/web/，链接要落到 ./web/
+// 先探测 A 是否可用，不可用再切到 B 的相对路径（不改变页面其他部分）。
+(function () {
+  var links = document.querySelectorAll('a[data-web-link]');
+  if (!links.length) return;
+  function useDocsRoot() {
+    for (var i = 0; i < links.length; i++) links[i].setAttribute('href', 'web/index.html');
+  }
+  try {
+    fetch('../web/index.html', { method: 'HEAD' }).then(function (r) {
+      if (!r.ok) useDocsRoot();
+    }).catch(useDocsRoot);
+  } catch (e) {
+    useDocsRoot();
+  }
+})();
+</script>
 </body>
 </html>

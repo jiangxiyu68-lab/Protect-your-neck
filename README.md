@@ -41,7 +41,12 @@
 
 > 实时检测那张是"未检出"状态（没有真人入镜）。真机检测效果请自己装一个试。
 
-## 下载安装
+## 网页版（浏览器直接用）
+
+不想装 App 可以先试网页版：**<https://USERNAME.github.io/cervical-guard/web/>**
+（部署见 docs/web/README.md；需 https 才能用摄像头）
+
+
 
 1. 到 [Releases](https://github.com/USERNAME/cervical-guard/releases) 页面下载最新的 `颈椎守护-x.y.z-release.apk`
 2. 手机上点开安装（需要允许「安装未知来源应用」）
