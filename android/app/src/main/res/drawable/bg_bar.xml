@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 今日三级占比条的容器（子 View 会被圆角裁剪） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/surface_alt" />
+    <corners android:radius="4dp" />
+</shape>

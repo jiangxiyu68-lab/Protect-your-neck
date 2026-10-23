@@ -1,0 +1,46 @@
+# ═══════════════════════════════════════════════════════════════════
+# .gitignore —— 哪些文件不该进仓库
+#
+# 规则：被这里忽略的文件，git 完全看不见，`git add .` 也不会带上它。
+# 改完可以用 `git status --ignored` 查看哪些文件被忽略了。
+# ═══════════════════════════════════════════════════════════════════
+
+# ── 构建产物（每次编译都会重新生成，体积大且没意义）──
+build/
+.gradle/
+*.dex
+*.class
+*.hprof
+
+# ── 本机专属配置（里面写着你电脑的 Android SDK 路径，别人 clone 下来必须自己生成）──
+local.properties
+
+# ── 签名密钥（**绝对不能提交**，泄露 = 别人可以冒充你发版）──
+keystore/
+*.jks
+*.keystore
+keystore.properties
+
+# ── 安装包：APK 走 GitHub Releases 附件，不进 git 历史 ──
+# 33MB 的二进制一旦进了历史，以后想删都删不干净（要改写全部历史），
+# 新手最容易在这一步把仓库搞臃肿。下载地址见 dist/README.md。
+dist/*.apk
+dist/*.aab
+*.apk
+*.aab
+
+# ── Kotlin 2.x 会话目录 ──
+.kotlin/
+
+# ── IDE ──
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# ── 本机临时 ──
+*.log
+captures/
+.externalNativeBuild/
+.cxx/

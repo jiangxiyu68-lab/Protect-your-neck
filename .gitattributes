@@ -1,0 +1,52 @@
+# ═══════════════════════════════════════════════════════════════════
+# .gitattributes —— 管住换行符（Windows 新手最容易踩的坑）
+#
+# 背景：Windows 的 git 默认会把文本文件存成 CRLF，Linux/CI 上却是 LF。
+# 同一个人在不同机器上提交，git 就会报「LF will be replaced by CRLF」，
+# 或者整个文件显示成"全改了"，diff 全是噪音。
+#
+# 这里的策略：仓库内部统一存 LF，工作区也检出 LF（Windows 上照样能编译）。
+# 只有 .bat / .cmd 这种 Windows 脚本必须留 CRLF，否则会出怪问题。
+# ═══════════════════════════════════════════════════════════════════
+
+# 默认：自动识别文本文件，统一 LF
+* text=auto eol=lf
+
+# ── 源码与文本：一律 LF ──
+*.kt         text eol=lf
+*.kts        text eol=lf
+*.java       text eol=lf
+*.xml        text eol=lf
+*.pro        text eol=lf
+*.properties text eol=lf
+*.md         text eol=lf
+*.html       text eol=lf
+*.css        text eol=lf
+*.js         text eol=lf
+*.json       text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.txt        text eol=lf
+.gitignore   text eol=lf
+.gitattributes text eol=lf
+
+# ── Windows 脚本：必须 CRLF ──
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+
+# ── Shell 脚本：必须 LF（CI 在 Linux 上执行，CRLF 会报 bad interpreter）──
+gradlew      text eol=lf
+*.sh         text eol=lf
+
+# ── 二进制：禁止任何换行转换与文本 diff ──
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.webp       binary
+*.ico        binary
+*.apk        binary
+*.aab        binary
+*.jar        binary
+*.task       binary
+*.jks        binary
+*.keystore   binary

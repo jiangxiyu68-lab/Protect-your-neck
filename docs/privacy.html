@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>颈椎守护 · 隐私政策</title>
+<style>
+:root { color-scheme: light dark; }
+body { max-width: 780px; margin: 0 auto; padding: 28px 20px 90px;
+  font: 16px/1.78 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #1a1a1a; background: #fff; }
+@media (prefers-color-scheme: dark) {
+  body { color: #e8e8e8; background: #14181c; }
+  a { color: #6aa8ff; }
+  h2 { border-bottom-color: #fff3; }
+  code, pre.tbl { background: #fff2; }
+}
+h1 { font-size: 1.72em; margin: 0 0 .5em; }
+h2 { font-size: 1.22em; margin: 1.9em 0 .55em; padding-bottom: .28em; border-bottom: 1px solid #0002; }
+h3 { font-size: 1.05em; margin: 1.35em 0 .4em; }
+hr { border: 0; border-top: 1px solid #0002; margin: 2.2em 0; }
+code { background: #8881; padding: .12em .36em; border-radius: 4px; font-size: .92em; }
+pre.tbl { overflow-x: auto; font-size: .85em; line-height: 1.55; background: #8881;
+  padding: 10px 12px; border-radius: 8px; margin: .5em 0; }
+ul { margin: .4em 0 .8em; padding-left: 1.35em; }
+li { margin: .22em 0; }
+blockquote { margin: .8em 0; padding: .5em .9em; border-left: 3px solid #2e7df6;
+  background: #2e7df614; border-radius: 0 6px 6px 0; }
+p { margin: .62em 0; }
+.foot { margin-top: 3.2em; font-size: .86em; opacity: .62; }
+</style>
+</head>
+<body>
+<h1>隐私政策 · Privacy Policy</h1>
+
+<p><strong>应用名称</strong>：颈椎守护（Cervical Guard）</p>
+<p><strong>开发者</strong>：个人开发者</p>
+<p><strong>最后更新</strong>：2026-10-23</p>
+<p><strong>适用版本</strong>：1.5.1 及以上</p>
+
+<hr/>
+
+<h2>一句话总结</h2>
+
+<p><strong>本应用不申请网络权限，所有数据都留在你的手机上，没有任何服务器。</strong></p>
+
+<hr/>
+
+<h2>1. 我们收集什么</h2>
+
+<h3>1.1 相机画面</h3>
+
+<ul>
+<li><strong>用途</strong>：通过前置摄像头拍摄你的侧脸与肩膀，在本机用 MediaPipe 姿态模型估算头部角度。</li>
+<li><strong>处理方式</strong>：<strong>仅在内存中逐帧处理，不写入任何文件、不上传、不留存</strong>。每一帧处理完即丢弃。</li>
+<li><strong>例外</strong>：如果你在设置里开启了「提醒时附上画面」，触发提醒时会截取<strong>一张</strong>当前画面，仅用于生成<strong>本机通知</strong>的缩略图，存在内存里、通知消失后即释放。<strong>不会写入相册、不会上传。</strong> 该开关默认关闭，可随时关闭。</li>
+</ul>
+
+<h3>1.2 坐姿数据</h3>
+
+<ul>
+<li>记录内容：每分钟的安全/注意/危险秒数、最大头前倾角度、未计分秒数。</li>
+<li>存储位置：<strong>你手机本地的 SQLite 数据库</strong>（应用私有目录，其他应用无法访问）。</li>
+<li>保留期限：直到你卸载应用或清除应用数据。</li>
+</ul>
+
+<h3>1.3 成长数据</h3>
+
+<ul>
+<li>等级、经验、积分、已拥有的小鹿时装、外观偏好、阈值设置。</li>
+<li>存储位置：本机 SharedPreferences。</li>
+</ul>
+
+<h3>1.4 我们不收集</h3>
+
+<ul>
+<li>❌ 不收集账号、手机号、邮箱（本应用无账号系统）</li>
+<li>❌ 不收集设备标识符（IMEI / Android ID / OAID / 广告 ID）</li>
+<li>❌ 不收集位置信息</li>
+<li>❌ 不收集通讯录、短信、通话记录</li>
+<li>❌ 不收集其他应用列表</li>
+<li>❌ <strong>不申请 <code>INTERNET</code> 与 <code>ACCESS_NETWORK_STATE</code> 权限</strong>（已在清单中显式移除）</li>
+</ul>
+
+<h2>2. 权限说明</h2>
+
+<pre class="tbl">| 权限 | 用途 | 是否必需 |</pre>
+<pre class="tbl">|---|---|---|</pre>
+<pre class="tbl">| `CAMERA` | 拍摄你的侧脸用于姿态估算 | 必需（否则无法检测） |</pre>
+<pre class="tbl">| `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_CAMERA` | 让守护在锁屏 / 切到后台时继续运行，并在通知栏常驻提示 | 必需 |</pre>
+<pre class="tbl">| `POST_NOTIFICATIONS` | 低头超时后弹出提醒通知（Android 13+ 需授权） | 可选，拒绝后仅无通知 |</pre>
+<pre class="tbl">| `VIBRATE` | 提醒时震动 | 可选 |</pre>
+
+<p><strong>没有申请</strong>：网络、位置、存储写入、通讯录、麦克风、后台定位等。</p>
+
+<h2>3. 数据如何离开本机</h2>
+
+<p><strong>唯一的途径是你主动导出 CSV。</strong> 点击「导出」后：</p>
+
+<p>1. 应用在你手机的缓存目录生成一个 CSV 文件；</p>
+<p>2. 通过系统分享面板（<code>FileProvider</code>）交给你选择的应用（如微信、邮件、文件管理器）；</p>
+<p>3. 之后数据流向由你选择的目标应用决定，<strong>与本应用无关</strong>。</p>
+
+<p>除此外，应用<strong>不会</strong>通过任何方式向外传输数据。</p>
+
+<h2>4. 关于底层依赖的透明说明</h2>
+
+<p>本应用使用 Google MediaPipe 做姿态推理。MediaPipe 的 <code>tasks-core</code> 传递依赖了 Google 的</p>
+<p><code>datatransport</code> 遥测组件，该组件会在后台尝试调度上报事件。</p>
+
+<p><strong>但由于本应用已移除网络权限</strong>，这些上报请求会因缺少 <code>ACCESS_NETWORK_STATE</code> / <code>INTERNET</code></p>
+<p>被系统直接拒绝，<strong>不产生任何网络流量、不发送任何数据</strong>。这一点可以在 <code>app/build.gradle.kts</code></p>
+<p>的注释与 <code>AndroidManifest.xml</code> 的 <code>tools:node=&quot;remove&quot;</code> 中核对，也可以自行用</p>
+<p><code>aapt dump permissions &lt;apk&gt;</code> 验证。</p>
+
+<h2>5. 人脸信息合规说明</h2>
+
+<p>根据《个人信息保护法》第 28、29 条，人脸信息属于<strong>敏感个人信息</strong>。本应用的处理方式：</p>
+
+<ul>
+<li><strong>不提取人脸特征</strong>：不生成人脸特征向量、不做人脸识别、不做身份比对、不建立人脸库；</li>
+<li><strong>不做身份识别</strong>：只提取 33 个身体关键点中的耳、鼻、肩位置，用于计算角度；</li>
+<li><strong>不外传</strong>：画面不出本机；</li>
+<li><strong>不存储</strong>：画面不落盘（除上文 1.1 的临时通知缩略图，且默认关闭）。</li>
+</ul>
+
+<p>因此本应用不构成&quot;人脸识别&quot;应用，但为尊重你的知情权，首次开启守护前会明确告知相机的用途。</p>
+
+<h2>6. 未成年人</h2>
+
+<p>本应用不面向 14 周岁以下儿童。若未成年人使用，应在监护人指导下进行。</p>
+
+<h2>7. 你的权利</h2>
+
+<ul>
+<li><strong>查看</strong>：应用内「数据」页可查看全部统计；数据库文件位于应用私有目录。</li>
+<li><strong>删除</strong>：卸载应用即删除全部数据；或在系统设置中「清除数据」。</li>
+<li><strong>导出</strong>：随时可导出 CSV 带走自己的数据。</li>
+<li><strong>撤回同意</strong>：随时可在系统设置中撤销相机权限，或关闭「开始守护」。</li>
+</ul>
+
+<h2>8. 变更</h2>
+
+<p>隐私政策如有变更，会在应用更新说明与本文件中标注。重大变更会重新征求同意。</p>
+
+<h2>9. 联系方式</h2>
+
+<ul>
+<li>问题反馈：请在仓库的 Issues 中提出</li>
+<li>邮箱：（请开发者填写）</li>
+</ul>
+
+<hr/>
+
+<h1>Privacy Policy (English)</h1>
+
+<p><strong>App</strong>: Cervical Guard</p>
+<p><strong>Last updated</strong>: 2026-10-23</p>
+
+<p><strong>Short version: this app does not request network permissions. All data stays on your device. There is no server.</strong></p>
+
+<ul>
+<li><strong>Camera</strong>: frames are processed in memory only, never written to disk, never uploaded.</li>
+</ul>
+<p>  Optional &quot;attach snapshot to alert&quot; (off by default) creates one in-memory thumbnail for a local notification only.</p>
+<ul>
+<li><strong>Posture data</strong>: stored in a local SQLite database inside the app&#x27;s private directory; deleted on uninstall.</li>
+<li><strong>No collection of</strong>: accounts, phone numbers, device identifiers (IMEI/Android ID/OAID/GAID), location, contacts, SMS, installed apps.</li>
+<li><strong>Data leaves the device only when you tap &quot;Export&quot;</strong>, which generates a CSV and hands it to the system share sheet.</li>
+<li><strong>Face data</strong>: we do NOT extract facial feature vectors, do NOT perform face recognition or identification, do NOT store images. Only ear/nose/shoulder landmark positions are used to compute angles.</li>
+<li><strong>Third-party note</strong>: MediaPipe&#x27;s <code>tasks-core</code> transitively depends on Google&#x27;s <code>datatransport</code> telemetry library. Because this app removes <code>INTERNET</code> and <code>ACCESS_NETWORK_STATE</code> permissions, those upload attempts are rejected by the OS and produce no network traffic.</li>
+</ul>
+
+<p><strong>Disclaimer</strong>: This app is a posture reminder tool, <strong>not a medical device or diagnostic tool</strong>.</p>
+
+<div class="foot">本页面由项目仓库发布 · 最后更新 2026-10-23</div>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  浅色配色（v1.5）。深色版在 values-night/colors.xml，两份的 color 名字必须完全一致。
+
+  切换机制：`AppCompatDelegate.setDefaultNightMode()` —— 深色时系统去读 values-night，
+  浅色时读这里。所以「深色/浅色」是**两套资源**，不是运行时改色，切换后 Activity 会重建一次。
+  好处是弹窗、输入框、下拉菜单这些系统控件也会跟着变（之前弹窗一直是白的，就是这个原因：
+  App 主体写死了深色，但弹窗走的是主题的 DayNight，系统白天=白底）。
+-->
+<resources>
+    <color name="bg">#F4F6F9</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_alt">#E9EEF5</color>
+    <color name="stroke">#D5DDE7</color>
+
+    <color name="text">#14181C</color>
+    <color name="text_dim">#5C6875</color>
+    <color name="text_faint">#8A97A5</color>
+
+    <color name="accent">#2E7DF6</color>
+    <color name="accent_dim">#1E5FC0</color>
+    <color name="white">#FFFFFF</color>
+    <color name="chip_text">#0F1216</color>
+
+    <color name="safe">#1FA34A</color>
+    <color name="warn">#D98518</color>
+    <color name="danger">#D93A32</color>
+
+    <!-- 周报图表（自绘）：浅色下白底 + 浅网格 + 深文字 -->
+    <color name="chart_bg">#FFFFFF</color>
+    <color name="chart_grid">#E2E8F0</color>
+    <color name="chart_text">#14181C</color>
+    <color name="chart_text_dim">#5C6875</color>
+
+    <!-- 放松操圆环（自绘）：浅色下浅轨道 + 深文字 -->
+    <color name="ring_track">#E3E8EE</color>
+    <color name="ring_text">#1F2328</color>
+    <color name="ring_text_dim">#57606A</color>
+    <!-- 导航栏固定深色：EMUI 忽略 windowLightNavigationBar，白底会让图标看不见 -->
+    <color name="nav_bar">#0F1216</color>
+</resources>

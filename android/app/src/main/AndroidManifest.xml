@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- v1.6 发布准备：targetSdk 34 起，相机类型前台服务必须单独申请该权限（Android 14+） -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+      ⚠️ 显式移除网络权限（v1.6 发布准备，重要）
+
+      MediaPipe 的 `tasks-vision` → `tasks-core` 会传递依赖 Google 的 **datatransport 遥测组件**
+      （transport-api / backend-cct / runtime），它会在合并 manifest 里偷偷塞进：
+        · android.permission.INTERNET
+        · android.permission.ACCESS_NETWORK_STATE
+        · TransportBackendDiscovery / CctBackendFactory / JobInfoSchedulerService 等组件
+      本 App **没有任何业务代码联网**（推理全在本机 MediaPipe 完成，数据只写本机 SQLite），
+      但只要有 INTERNET 权限，「不联网、不会上传」这句话在技术审计上就不成立。
+
+      验收/发布审查实测：`aapt dump permissions` 能看到这两条权限 —— 所以必须在这里显式移除。
+      移除后要回归 MediaPipe 推理（model 初始化 + 每帧 infer），确认没有 NoClassDefFoundError。
+    -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:name=".CgApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CervicalGuard">
+        <!-- 主界面 = 唯一入口（v1.4.1）。
+             冷启动的「品牌画面」不靠独立 Activity，而是靠本主题的 windowBackground
+             直接由系统启动窗口画出来（Android 12 官方做法）：
+             好处是**没有 Activity 切换**，因此不会出现「每次从后台点图标都重播启动页」
+             以及「MainActivity 实例无限累积」的问题（v1.4 的独立 SplashActivity 就栽在这上面）。 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.CervicalGuard.Main">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 小鹿衣橱（v1.2 激励模式）：从主界面进入，非导出 -->
+        <activity
+            android:name=".ui.WardrobeActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait" />
+
+        <service
+            android:name=".PostureService"
+            android:exported="false"
+            android:foregroundServiceType="camera" />
+
+        <!-- 导出的 CSV 通过 FileProvider 分享，不暴露真实文件路径 -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+    </application>
+
+</manifest>

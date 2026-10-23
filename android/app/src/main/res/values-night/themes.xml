@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      深色主题（v1.5.1）：同名 style 会整块覆盖 values/themes.xml 里的定义，
+      所以共用项全部放在 `Theme.CervicalGuard.Base` 里，这里只覆盖系统栏相关的几项。
+    -->
+    <style name="Theme.CervicalGuard" parent="Theme.CervicalGuard.Base">
+        <item name="android:statusBarColor">@color/bg</item>
+        <!-- 深底 → 系统栏图标必须是浅色 -->
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- 主界面：深色品牌图作启动窗口（与浅色版同样的理由，见 values/themes.xml 注释） -->
+    <style name="Theme.CervicalGuard.Main" parent="Theme.CervicalGuard">
+        <item name="android:windowBackground">@drawable/bg_splash_window</item>
+    </style>
+</resources>

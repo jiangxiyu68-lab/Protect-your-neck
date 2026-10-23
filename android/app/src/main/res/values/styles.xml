@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 涓绘寜閽紙寮€濮?鍋滄瀹堟姢锛?-->
+    <style name="Cg.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">52dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="backgroundTint">@color/accent</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="rippleColor">#33FFFFFF</item>
+    </style>
+
+    <!-- 娆¤鎸夐挳锛堣缃?/ 鍛ㄦ姤 / 瀵煎嚭锛?-->
+    <style name="Cg.Button.Secondary" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:minHeight">44dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:textSize">14sp</item>
+        <!-- Material OutlinedButton 默认左右各 16dp padding。
+             按钮行从 4 个变 5 个后每格只剩约 118px，扣掉 padding 放不下两个汉字，
+             会出现「设/置」竖排换行（验收专员截图发现）。
+             这里把 padding 压到 4dp + 强制单行，保证 5 个按钮都能横排。 -->
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:singleLine">true</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="strokeColor">@color/stroke</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="rippleColor">#33FFFFFF</item>
+    </style>
+
+    <!-- 鎸囨爣灏忔爣棰?-->
+    <style name="Cg.Metric.Label" parent="">
+        <item name="android:textSize">11sp</item>
+        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+    <!-- 鎸囨爣鏁板€?-->
+    <style name="Cg.Metric.Value" parent="">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+
+    <!-- 鍗＄墖鏍囬 -->
+    <style name="Cg.CardTitle" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_dim</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <!-- 缁熻琛岀殑鏍囩 / 鏁板€?-->
+    <style name="Cg.Stat.Label" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_dim</item>
+    </style>
+
+    <style name="Cg.Stat.Value" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+</resources>

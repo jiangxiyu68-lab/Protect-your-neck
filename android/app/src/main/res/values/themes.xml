@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      浅色主题（v1.5.1）。
+
+      结构：`Theme.CervicalGuard.Base` 放两套主题共用的东西，
+      `Theme.CervicalGuard` 在浅色/深色下只覆盖系统栏相关的几项
+      （深色版在 values-night/themes.xml，同名 style 会整块覆盖本文件里的定义）。
+
+      ⚠️ 导航栏为什么**永远深色**：
+      浅色模式下本该用 `windowLightNavigationBar=true` 让导航栏变白底 + 深图标，
+      但华为 EMUI 9.1 **忽略这个 flag**（验收专员 dumpsys 实测：mSystemUiVisibility
+      已含 LIGHT_NAVIGATION_BAR，图标仍是最暗 186 的浅灰白，对比度 1.6:1 基本看不见）。
+      所以改成导航栏底色固定深色 + 白色图标 —— 两种主题下都永远可见，不依赖厂商实现。
+    -->
+    <style name="Theme.CervicalGuard.Base" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/accent</item>
+        <item name="colorPrimaryVariant">@color/accent_dim</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondaryVariant">@color/accent_dim</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- 这几个是「深色 App 里弹窗纯白」的根因，缺了对话框就退回 Material 白天色 -->
+        <item name="android:colorBackground">@color/bg</item>
+        <item name="colorOnBackground">@color/text</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/text</item>
+        <item name="colorError">@color/danger</item>
+        <item name="colorOnError">@color/white</item>
+        <item name="colorControlNormal">@color/text_dim</item>
+        <item name="colorControlActivated">@color/accent</item>
+
+        <item name="android:windowBackground">@color/bg</item>
+        <!-- 导航栏：两套主题都深底，白图标永远可见 -->
+        <item name="android:navigationBarColor">@color/nav_bar</item>
+    </style>
+
+    <!-- 浅色：浅底 + 深色系统栏图标（windowLightStatusBar 也让**启动窗口阶段**就正确） -->
+    <style name="Theme.CervicalGuard" parent="Theme.CervicalGuard.Base">
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <!--
+      主界面主题：windowBackground 就是那张品牌图。
+      冷启动时由**系统启动窗口**直接把它画出来（实测 143~190ms 可见），用户不再盯 2~3 秒黑屏；
+      主界面内容根布局自带 @color/bg 背景，内容一出现就把它盖住。
+
+      为什么不用独立 SplashActivity：它 finish 后任务栈 base 变成 MainActivity，
+      再点桌面图标会重播启动页并不断压入新实例（验收专员实测 3 次后栈里 5 个）。
+    -->
+    <style name="Theme.CervicalGuard.Main" parent="Theme.CervicalGuard">
+        <item name="android:windowBackground">@drawable/bg_splash_window</item>
+    </style>
+</resources>

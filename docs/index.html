@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>颈椎守护 · Cervical Guard</title>
+<meta name="description" content="用前置摄像头实时监测坐姿，低头太久会提醒你。所有计算在手机本地完成，不联网、不上传。"/>
+<style>
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0;
+  font: 16px/1.7 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: #1a1a1a; background: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  body { color: #e8e8e8; background: #0f1216; }
+  .card { background: #171c22 !important; border-color: #2c3540 !important; }
+  .sub { color: #93a1b0 !important; }
+  a { color: #6aa8ff; }
+}
+.wrap { max-width: 860px; margin: 0 auto; padding: 56px 22px 96px; }
+.hero { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+.hero img.icon { width: 108px; height: 108px; border-radius: 24px; box-shadow: 0 8px 28px #0003; }
+h1 { font-size: 2em; margin: 0 0 .2em; letter-spacing: .01em; }
+.sub { color: #5c6875; font-size: 1.02em; margin: 0 0 1.1em; }
+.tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .78em;
+  background: #2e7df61f; color: #2e7df6; margin-right: 6px; }
+.btn { display: inline-block; padding: 13px 26px; border-radius: 13px; text-decoration: none;
+  font-weight: 600; background: #2e7df6; color: #fff !important; margin: 6px 8px 6px 0; }
+.btn.ghost { background: transparent; color: #2e7df6 !important; border: 1px solid #2e7df655; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 40px 0; }
+.card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; background: #fafbfd; }
+.card h3 { margin: 0 0 .35em; font-size: 1.02em; }
+.card p { margin: 0; font-size: .93em; color: #5c6875; }
+h2 { font-size: 1.28em; margin: 2.4em 0 .8em; }
+.shots { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.shots img { height: 380px; border-radius: 12px; box-shadow: 0 6px 20px #0002; }
+footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid #0002; font-size: .88em; color: #7b8794; }
+code { background: #8881; padding: .12em .36em; border-radius: 4px; font-size: .92em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <img class="icon" src="screenshots/icon-512.png" alt="颈椎守护图标"/>
+    <div>
+      <h1>颈椎守护</h1>
+      <p class="sub">用前置摄像头实时监测坐姿，低头太久会提醒你。<br/>所有计算在手机本地完成，<strong>不联网、不上传</strong>。</p>
+      <span class="tag">Android 7.0+</span>
+      <span class="tag">无网络权限</span>
+      <span class="tag">无广告 · 无账号</span>
+    </div>
+  </div>
+
+  <p style="margin-top:28px">
+    <a class="btn" href="https://github.com/USERNAME/cervical-guard/releases/latest">下载 APK</a>
+    <a class="btn ghost" href="privacy.html">隐私政策</a>
+  </p>
+
+  <div class="grid">
+    <div class="card"><h3>实时姿态检测</h3><p>MediaPipe 姿态模型本机推理，约 3 fps，估算 CVA 颈颅角与头前倾角。</p></div>
+    <div class="card"><h3>三级判定 + 提醒</h3><p>安全 / 注意 / 危险；连续低头、累计低头、长时间工作疲劳三种触发。</p></div>
+    <div class="card"><h3>放松操</h3><p>收下巴动作引导，带示范动画与幅度评分。</p></div>
+    <div class="card"><h3>统计与导出</h3><p>今日 / 近 7 天 / 近 30 天分级堆叠图，支持 CSV 导出。</p></div>
+    <div class="card"><h3>成长系统</h3><p>健康坐姿换积分，解锁小鹿的 8 件时装。</p></div>
+    <div class="card"><h3>深色 / 浅色</h3><p>跟随系统或手动切换，夜间不刺眼。</p></div>
+  </div>
+
+  <h2>截图</h2>
+  <div class="shots">
+    <img src="screenshots/01-main-dark.png" alt="主界面深色"/>
+    <img src="screenshots/04-data-7d.png" alt="数据统计"/>
+    <img src="screenshots/05-wardrobe.png" alt="小鹿衣橱"/>
+    <img src="screenshots/04-main-light.png" alt="主界面浅色"/>
+  </div>
+
+  <h2>安装</h2>
+  <p>1. 从 <a href="https://github.com/USERNAME/cervical-guard/releases/latest">Releases 页面</a>下载 <code>颈椎守护-x.y.z-release.apk</code><br/>
+     2. 手机上点开安装（需允许「安装未知来源应用」）<br/>
+     3. 授予相机权限 → 点「开始守护」</p>
+  <p class="sub">首次打开建议把手机侧放，镜头能拍到侧脸与肩膀；正面对着镜头时测不出头前倾，App 会标注「角度不可信」且不计分。</p>
+
+  <footer>
+    <strong>免责声明</strong>：本应用为健康提醒工具，<strong>非医疗诊断</strong>，不能替代专业医疗建议。<br/>
+    代码以 MIT 许可发布；第三方组件许可见 NOTICE.md。
+  </footer>
+
+</div>
+</body>
+</html>

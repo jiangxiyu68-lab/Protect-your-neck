@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  FileProvider 可分享的目录（用于把导出的 CSV 发给微信/邮件等）。
+  不写 path 属性即表示该目录的根。
+-->
+<paths>
+    <external-files-path name="export" />
+    <files-path name="internal" />
+</paths>
