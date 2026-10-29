@@ -138,7 +138,7 @@ publish/web/
 └── README.md
 ```
 
-模型文件 SHA256（与 `cervical-guard/android/app/src/main/assets/pose_landmarker_lite.task` 一致）：
+模型文件 SHA256（与 `Protect-your-neck/android/app/src/main/assets/pose_landmarker_lite.task` 一致）：
 
 ```
 59929E1D1EE95287735DDD833B19CF4AC46D29BC7AFDDBBF6753C459690D574A

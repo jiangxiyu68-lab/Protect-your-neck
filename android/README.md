@@ -176,7 +176,7 @@ class PostureService : Service() {
 ### 构建命令（Windows / Git Bash）
 
 ```bash
-cd cervical-guard/android
+cd Protect-your-neck/android
 JAVA_HOME='D:\app\java' ANDROID_HOME='D:\Android\Sdk' \
   "D:/Android/gradle-8.9/bin/gradle.bat" assembleDebug
 # 产物：app/build/outputs/apk/debug/app-debug.apk

@@ -9,7 +9,7 @@
 打开 Releases 页面下载最新版：
 
 ```
-https://github.com/jiangxiyu68-lab/cervical-guard/releases
+https://github.com/jiangxiyu68-lab/Protect-your-neck/releases
 ```
 
 ## 为什么不放进仓库
