@@ -13,22 +13,28 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x android/gradlew || true
+      # GitHub 的 ubuntu 运行器自带 Android SDK（platforms;android-35、
+      # build-tools 35.0.0、licenses 已接受），不需要再装一遍。
+      # 原先用的 android-actions/setup-android@v3 只支持 Node 20，被 GitHub
+      # 强制升到 Node 24 后直接失败（2026-10-29 实测，13 秒挂在这一步），故移除。
+      - name: Check Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          ls "$ANDROID_HOME/platforms" || true
+          ls "$ANDROID_HOME/build-tools" || true
+          java -version
 
       - name: Build debug APK
         working-directory: android
         run: |
-          if [ -f gradlew ]; then ./gradlew assembleDebug --no-daemon
-          else gradle assembleDebug --no-daemon; fi
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
