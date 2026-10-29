@@ -8,7 +8,9 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # 固定 24.04：ubuntu-latest 正在迁往 Ubuntu 26（2026-10-19 起），
+    # 迁移期间不同运行可能落在不同镜像上，导致同样代码有时绿有时红。
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -17,6 +19,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       # GitHub 的 ubuntu 运行器自带 Android SDK（platforms;android-35、
       # build-tools 35.0.0、licenses 已接受），不需要再装一遍。
