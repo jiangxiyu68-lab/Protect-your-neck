@@ -43,12 +43,12 @@
 
 ## 网页版（浏览器直接用）
 
-不想装 App 可以先试网页版：**<https://USERNAME.github.io/cervical-guard/web/>**
+不想装 App 可以先试网页版：**<https://jiangxiyu68-lab.github.io/cervical-guard/web/>**
 （部署见 docs/web/README.md；需 https 才能用摄像头）
 
 
 
-1. 到 [Releases](https://github.com/USERNAME/cervical-guard/releases) 页面下载最新的 `颈椎守护-x.y.z-release.apk`
+1. 到 [Releases](https://github.com/jiangxiyu68-lab/cervical-guard/releases) 页面下载最新的 `颈椎守护-x.y.z-release.apk`
 2. 手机上点开安装（需要允许「安装未知来源应用」）
 3. 首次打开授予**相机权限**，然后点「开始守护」
 
@@ -90,7 +90,7 @@
 **Windows（PowerShell）**：
 
 ```powershell
-git clone https://github.com/USERNAME/cervical-guard.git
+git clone https://github.com/jiangxiyu68-lab/cervical-guard.git
 cd cervical-guard\android
 
 # 需要 JDK 17+ 与 Android SDK（compileSdk 35）；路径换成你自己的
@@ -104,7 +104,7 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 **macOS / Linux**：
 
 ```bash
-git clone https://github.com/USERNAME/cervical-guard.git
+git clone https://github.com/jiangxiyu68-lab/cervical-guard.git
 cd cervical-guard/android
 export JAVA_HOME=/path/to/jdk17
 export ANDROID_HOME=/path/to/android-sdk
