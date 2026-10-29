@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Android-7.0%2B-green.svg)]()
 [![Version](https://img.shields.io/badge/version-1.5.1-orange.svg)]()
+[![Build APK](https://github.com/jiangxiyu68-lab/Protect-your-neck/actions/workflows/build.yml/badge.svg)](https://github.com/jiangxiyu68-lab/Protect-your-neck/actions/workflows/build.yml)
 
 ---
 
@@ -48,7 +49,7 @@
 
 
 
-1. 到 [Releases](https://github.com/jiangxiyu68-lab/Protect-your-neck/releases) 页面下载最新的 `颈椎守护-x.y.z-release.apk`
+1. 到 [Releases](https://github.com/jiangxiyu68-lab/Protect-your-neck/releases) 页面下载最新的 `CervicalGuard-vx.y.z.apk`
 2. 手机上点开安装（需要允许「安装未知来源应用」）
 3. 首次打开授予**相机权限**，然后点「开始守护」
 
