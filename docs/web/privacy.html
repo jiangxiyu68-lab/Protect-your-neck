@@ -79,8 +79,8 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid #8883; font-
   <h2>3. 哪些请求会联网</h2>
   <div class="card">
     <ul>
-      <li><b>MediaPipe 的 JS / WASM</b>：首次开始守护时从 CDN（jsDelivr / unpkg）下载推理库。请求只包含这些代码文件，<b>不包含你的画面或关键点</b>。部署者可把 WASM 放到本地 <code>assets/wasm/</code> 后完全离线运行（见 README）。</li>
-      <li><b>姿态模型</b>：默认使用本地文件 <code>assets/pose_landmarker_lite.task</code>（5.5MB）；仅当本地文件缺失时才回落到 Google 的模型下载地址。</li>
+      <li><b>MediaPipe 的 JS / WASM</b>：<b>已随本站内置</b>（<code>assets/vendor/</code>、<code>assets/wasm/</code>），打开页面<b>不会向任何 CDN 发起请求</b>，也不会传输你的画面或关键点。</li>
+      <li><b>姿态模型</b>：使用本站内置的 <code>assets/pose_landmarker_lite.task</code>（5.5MB），不访问 Google 或任何第三方地址。</li>
       <li>除此之外没有网络请求：没有账号、没有登录、没有云同步。</li>
     </ul>
     <p class="muted">提示：即便不联网，已加载过的库在浏览器缓存有效期内仍可继续工作；模型在本地时整站可离线使用。</p>
@@ -102,7 +102,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid #8883; font-
 
   <h2>6. 与 Android 版的区别</h2>
   <div class="card">
-    <p>Android 版把统计存在 App 私有目录的数据库里；网页版存在浏览器 localStorage 里，两者互不同步。Android 版不申请网络权限，网页版需要联网下载一次推理库（之后可离线）。详见 <a href="../privacy.html">完整隐私政策</a>（部署到 GitHub Pages 后可用）。</p>
+    <p>Android 版把统计存在 App 私有目录的数据库里；网页版存在浏览器 localStorage 里，两者互不同步。Android 版不申请网络权限；网页版把推理库与模型一并内置，运行期同样不发起网络请求。详见 <a href="../privacy.html">完整隐私政策</a>（部署到 GitHub Pages 后可用）。</p>
   </div>
 
   <h2>7. 变更与联系</h2>

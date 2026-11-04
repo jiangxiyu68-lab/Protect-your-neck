@@ -748,7 +748,11 @@
     state.modelPromise = loadModule()
       .then(function (mod) {
         return localWasmAvailable().then(function (hasLocal) {
-          var bases = hasLocal ? [LOCAL_WASM_BASE].concat(WASM_BASES) : [WASM_BASES[0]];
+          // ⚠️ 本地 WASM 缺失时必须把**全部** CDN 都作为候选。
+          // 原来这里只取 [WASM_BASES[0]]（cdn.jsdelivr.net），国内经常连不上 →
+          // FilesetResolver.forVisionTasks 永久 pending，界面卡在「姿势模型启动中」，
+          // 而且没有任何报错。真机踩过（2026-11-04）。
+          var bases = hasLocal ? [LOCAL_WASM_BASE].concat(WASM_BASES) : WASM_BASES.slice();
           return localModelAvailable().then(function (hasModel) {
             var modelUrl = hasModel ? LOCAL_MODEL : CDN_MODEL;
             var attempt = function (i, delegate) {
@@ -764,7 +768,11 @@
               if (state.starting) {
                 el.camState.textContent = '加载姿态模型（' + (hasModel ? '本地 5.5MB' : 'CDN') + '）…';
               }
-              return createLandmarker(mod, base, modelUrl, delegate).catch(function (e) {
+              // createLandmarker 内部要 fetch WASM（约 9.5MB）+ 模型，网络卡住时会
+              // 永久 pending。必须加超时，否则界面永远停在「启动中」且不报错。
+              return withTimeout(
+                createLandmarker(mod, base, modelUrl, delegate), 25000, '姿态模型初始化'
+              ).catch(function (e) {
                 console.warn('[MediaPipe] 初始化失败 base=' + base + ' delegate=' + delegate, e);
                 if (delegate === 'GPU') return attempt(i, 'CPU'); // 同一 base 先降级 CPU
                 return attempt(i + 1, 'GPU');

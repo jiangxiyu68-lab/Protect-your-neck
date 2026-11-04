@@ -225,38 +225,58 @@ node test\posture.selftest.js
 
 ## 模型加载、CDN 与完全离线
 
-默认加载顺序（`js/app.js` 顶部常量）：
+**仓库里已经内置了全部运行库**（`assets/vendor` + `assets/wasm` + 模型），
+打开页面**不会向任何 CDN 发请求**。
 
-1. **推理库（JS）**：`assets/vendor/vision_bundle.js`（若存在）→ jsDelivr → unpkg → fastly，每个 20 秒超时。
-2. **WASM**：`assets/wasm/`（若存在，通过 HEAD 探测）→ jsDelivr → unpkg → fastly。
-3. **模型**：`assets/pose_landmarker_lite.task`（本地，5.51MB）→ 本地不存在时才回落 Google `storage.googleapis.com`。
+默认加载顺序（`js/app.js` 顶部常量），每一级失败都会自动回落到下一级：
 
-也就是说：**仓库里已经带了模型，正常联网只需要从 CDN 拉 JS/WASM**。
+1. **推理库（JS）**：`assets/vendor/vision_bundle.js`（已内置）→ jsDelivr → unpkg → fastly，每个 20 秒超时。
+2. **WASM**：`assets/wasm/`（已内置，HEAD 探测）→ jsDelivr → unpkg → fastly。
+3. **模型**：`assets/pose_landmarker_lite.task`（已内置，5.51MB）→ 本地缺失才回落 Google `storage.googleapis.com`。
 
-### 完全离线（内网 / 断网演示）
+### 为什么必须内置（2026-11-04 真机踩坑）
 
-在 `publish\web` 下执行：
+早期版本只内置了模型、JS/WASM 走 CDN，结果在**中国大陆**出现最糟的症状：
+摄像头打开了，但界面**永远停在「姿势模型启动中」**，而且没有任何报错。
+
+两个原因叠加：
+
+1. 本地没有 WASM 时，代码只尝试 `WASM_BASES[0]`（`cdn.jsdelivr.net`），**其它镜像根本没试**；
+2. `createLandmarker()` 内的 fetch 没有超时，网络卡住就**永久 pending**。
+
+现已修复：本地缺失时把**全部**镜像作为候选，并给初始化加 25 秒超时（失败明确报错，不再假装在检测）。
+**实测内置后模型初始化 170~250ms，零 CDN 请求。**
+
+### 升级 MediaPipe 版本时如何重新获取运行库
+
+在 `docs/web` 下执行（`$V` 换成目标版本）：
 
 ```powershell
+$V = "0.10.20"
 New-Item -ItemType Directory -Force assets\vendor, assets\wasm | Out-Null
 
-# 推理库（约 130 KB）
-Invoke-WebRequest "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.20/vision_bundle.mjs" `
+# 推理库（约 136 KB）
+Invoke-WebRequest "https://unpkg.com/@mediapipe/tasks-vision@$V/vision_bundle.mjs" `
   -OutFile assets\vendor\vision_bundle.js
 
-# WASM 四个文件（SIMD + 非 SIMD，各一个 .js + .wasm）
-$base = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.20/wasm"
+# WASM 四个文件（SIMD + 非 SIMD，各一个 .js + .wasm；共约 19 MB）
+$base = "https://unpkg.com/@mediapipe/tasks-vision@$V/wasm"
 foreach ($f in "vision_wasm_internal.js","vision_wasm_internal.wasm",
                "vision_wasm_nosimd_internal.js","vision_wasm_nosimd_internal.wasm") {
   Invoke-WebRequest "$base/$f" -OutFile "assets\wasm\$f"
 }
 ```
 
-之后页面会优先用本地文件，不再请求 CDN。注意：
+> **用 unpkg 而不是 jsDelivr**：实测本机 jsDelivr 只有 22~220 KB/s 且偶发超时，unpkg 约 440 KB/s。
+> 下载后请核对大小：SIMD 版 `vision_wasm_internal.wasm` 应为 **9,574,032 字节**，
+> 非 SIMD 版 `vision_wasm_nosimd_internal.wasm` 应为 **9,448,638 字节**。
 
-- 这些是 **Apache-2.0** 许可的 MediaPipe 运行库，重分发时保留许可说明（项目根 `publish/github/NOTICE.md` 已列）。
+注意事项：
+
+- 这些是 **Apache-2.0** 许可的 MediaPipe 运行库，重分发时保留许可说明（`NOTICE.md` 已列）。
 - `assets/vendor/vision_bundle.js` 是 ESM 文件，只是扩展名改成了 `.js`（本地服务器 MIME 更稳）。
-- 若 CDN 被墙且没做离线包，页面会明确报「姿态模型加载失败」，不会假装在检测。
+- 若运行库缺失且 CDN 被墙，页面会明确报「姿态模型加载失败」，不会假装在检测。
+- 内置后 `docs/web/assets/` 约 20 MB，GitHub Pages 单站 1 GB 上限内没问题。
 
 ---
 
@@ -310,7 +330,7 @@ Settings → Pages → Source: `main` / **`/docs`**。
   - `cervicalguard.web.theme.v1`
   - `cervicalguard.web.privacyAck.v1`
 - 设置弹窗里有「清除今日统计」「清空全部本地数据」。
-- 联网请求只有：从 CDN 下载 MediaPipe 的 JS/WASM（不含画面）；模型默认本地。
+- **零联网请求**：推理库、WASM、模型全部内置在同源目录，页面只从本站取文件。
 - 完整说明见 [privacy.html](privacy.html)。
 
 ---
@@ -337,8 +357,8 @@ Settings → Pages → Source: `main` / **`/docs`**。
 **6. 显示「角度不可信」**
 你太正对镜头了（视角 > 50°）。侧身让镜头看到侧脸；这是算法诚实，不是 bug。
 
-**7. CDN 不通 / 模型加载失败**
-页面会提示。先确认能访问 `cdn.jsdelivr.net`；完全离线按上面「完全离线」放文件。局域网可自建静态服务器托管 `assets/wasm` 和 `assets/vendor`。
+**7. 页面一直停在「姿势模型启动中」**
+正常不该出现（运行库已内置）。若出现：① 打开开发者工具看 `assets/wasm/` 与 `assets/vendor/` 是否 404；② 确认部署时把这些文件一起上传了（`docs/web/assets/` 应约 20 MB）；③ 手机浏览器是否拦截了本地请求。这一症状的成因已写在上面「为什么必须内置」一节。
 
 **8. 帧率低**
 设置里把「推理帧率上限」降到 8~10；关掉其它吃 GPU 的程序；用 Chrome/Edge（Safari 的 WASM/GPU 路径可能更慢）。
