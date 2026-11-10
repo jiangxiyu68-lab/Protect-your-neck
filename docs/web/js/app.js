@@ -36,9 +36,17 @@
     privacy: 'cervicalguard.web.privacyAck.v1',
   };
   var TASKS_VISION_VERSION = '0.10.20';
+  // 资源基地址统一由 js/config.js 提供；没有 config.js 时退回原来的 assets/。
+  // 所有 wasm / 模型 URL 都从这里拼，默认行为与改造前一致。
+  var ASSET_CFG = window.CG_ASSET_CONFIG || {};
+  var ASSET_ROOT = ASSET_CFG.base || window.ASSET_BASE || 'assets/';
+  function assetUrl(rel) {
+    var root = ASSET_ROOT.charAt(ASSET_ROOT.length - 1) === '/' ? ASSET_ROOT : ASSET_ROOT + '/';
+    return new URL(root + rel, document.baseURI).href;
+  }
   // 注意：动态 import() 的相对路径按「脚本所在目录」解析（/js/assets/...），
   // 所以这里用 document.baseURI 拼出页面目录下的绝对地址。
-  var LOCAL_MODULE_URL = new URL('assets/vendor/vision_bundle.js', document.baseURI).href;
+  var LOCAL_MODULE_URL = assetUrl('vendor/vision_bundle.js');
   var MODULE_URLS = [
     // 完全离线部署：把 CDN 的 vision_bundle.mjs 另存为 assets/vendor/vision_bundle.js
     // 放在第一位；文件不存在时会自动回落到下面的 CDN。
@@ -47,13 +55,15 @@
     'https://unpkg.com/@mediapipe/tasks-vision@' + TASKS_VISION_VERSION + '/vision_bundle.mjs',
     'https://fastly.jsdelivr.net/npm/@mediapipe/tasks-vision@' + TASKS_VISION_VERSION + '/vision_bundle.mjs',
   ];
+  // 仅作「缓存路径不可用」时的旧回退；新加载路径的 wasm/model URL 全部由
+  // js/config.js 的候选源 + 单文件兜底拼出，不依赖下面这几个常量。
   var WASM_BASES = [
     'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + TASKS_VISION_VERSION + '/wasm',
     'https://unpkg.com/@mediapipe/tasks-vision@' + TASKS_VISION_VERSION + '/wasm',
     'https://fastly.jsdelivr.net/npm/@mediapipe/tasks-vision@' + TASKS_VISION_VERSION + '/wasm',
   ];
-  var LOCAL_WASM_BASE = 'assets/wasm';
-  var LOCAL_MODEL = 'assets/pose_landmarker_lite.task';
+  var LOCAL_WASM_BASE = assetUrl('wasm').replace(/\/$/, '');
+  var LOCAL_MODEL = assetUrl('pose_landmarker_lite.task');
   var CDN_MODEL =
     'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
 
@@ -207,7 +217,9 @@
   function withTimeout(promise, ms, label) {
     return new Promise(function (resolve, reject) {
       var timer = setTimeout(function () {
-        reject(new Error((label || '操作') + '超时（' + Math.round(ms / 1000) + ' 秒）'));
+        var e = new Error((label || '操作') + '超时（' + Math.round(ms / 1000) + ' 秒）');
+        e.code = 'TIMEOUT';
+        reject(e);
       }, ms);
       promise.then(
         function (v) { clearTimeout(timer); resolve(v); },
@@ -356,8 +368,10 @@
     facing: 'user',
     mirror: true,
     module: null, // @mediapipe/tasks-vision 模块
+    assetModuleUrl: null, // 从 Cache Storage 取出的 vision_bundle blob 地址
     landmarker: null,
     modelPromise: null,
+    startAttempted: false,
     backend: { module: null, wasm: null, model: null, delegate: null, error: null },
 
     raf: 0,
@@ -681,6 +695,10 @@
       return '姿态模型加载失败：' + (err.detail || err.message) +
         '。请检查网络（需要从 CDN 拉 MediaPipe 的 JS/WASM）；完全离线部署见 README「离线部署」。';
     }
+    if (err.code === 'ASSET') {
+      return '资源下载失败：' + (err.detail || err.message) +
+        '。点页面底部的「重试」重新加载；也可以先用「演示」看界面。';
+    }
     if (err.code === 'TIMEOUT') {
       return err.message + '。CDN 可能不通，可先用「演示」看界面。';
     }
@@ -689,22 +707,24 @@
 
   // ─────────────────────────── MediaPipe 加载 ───────────────────────────
   function loadModule() {
+    // 优先用 Cache Storage 里的模块（断网二次打开也能启动），失败再走原 CDN 列表
+    var urls = state.assetModuleUrl ? [state.assetModuleUrl].concat(MODULE_URLS) : MODULE_URLS;
     var index = 0;
     function tryNext() {
-      if (index >= MODULE_URLS.length) {
+      if (index >= urls.length) {
         var err = new Error('MediaPipe 推理库加载失败');
         err.code = 'MODEL';
         err.detail = '所有 CDN 都不可用';
         return Promise.reject(err);
       }
-      var url = MODULE_URLS[index++];
+      var url = urls[index++];
       if (state.starting) {
         setStatus('loading');
-        el.camState.textContent = '加载推理库（CDN）…';
+        el.camState.textContent = '加载推理库…';
       }
       return withTimeout(import(url), 20000, '推理库加载').then(
         function (mod) {
-          state.backend.module = url;
+          state.backend.module = url.indexOf('blob:') === 0 ? 'Cache Storage（vision_bundle.js）' : url;
           state.module = mod;
           return mod;
         },
@@ -729,15 +749,93 @@
       .catch(function () { return false; });
   }
 
+  function createLandmarkerFromFileset(mod, fileset, modelUrl, delegate) {
+    return mod.PoseLandmarker.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: modelUrl, delegate: delegate },
+      runningMode: 'VIDEO',
+      numPoses: 1,
+      minPoseDetectionConfidence: 0.5,
+      minPosePresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+  }
+
   function createLandmarker(mod, wasmBase, modelUrl, delegate) {
     return mod.FilesetResolver.forVisionTasks(wasmBase).then(function (fileset) {
-      return mod.PoseLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: modelUrl, delegate: delegate },
-        runningMode: 'VIDEO',
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.5,
-        minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
+      return createLandmarkerFromFileset(mod, fileset, modelUrl, delegate);
+    });
+  }
+
+  // 缓存路径：wasm 的 loader / binary 和模型都用 Cache Storage 里的 Blob URL，
+  // MediaPipe 的 locateFile 会按 fileset.wasmBinaryPath 取 wasm，不再发网络请求。
+  function initFromCachedAssets(mod, assets) {
+    var fileset = {
+      wasmLoaderPath: assets.wasmJsUrl,
+      wasmBinaryPath: assets.wasmBinUrl,
+    };
+    var attempt = function (delegate) {
+      if (state.starting) {
+        el.camState.textContent = '加载姿态模型（本地缓存已就绪）…';
+      }
+      return withTimeout(
+        createLandmarkerFromFileset(mod, fileset, assets.modelUrl, delegate),
+        25000, '姿态模型初始化'
+      ).then(function (lm) {
+        state.backend.delegate = delegate;
+        state.backend.wasm = 'Cache Storage（' + assets.version + '）';
+        state.backend.model = 'Cache Storage（pose_landmarker_lite.task）';
+        state.backend.assets = assets.fromCache ? 'cache-hit' : 'prefetched';
+        return lm;
+      }).catch(function (e) {
+        console.warn('[MediaPipe] 缓存资源初始化失败 delegate=' + delegate, e);
+        if (delegate === 'GPU') return attempt('CPU');
+        throw e;
+      });
+    };
+    return attempt('GPU');
+  }
+
+  // 原有「本地优先 + 全部 CDN 回退」逻辑，保持不推倒重来：
+  // 缓存路径不可用时（例如浏览器禁 Blob/缓存），仍走这里。
+  function initFromSources(mod) {
+    return localWasmAvailable().then(function (hasLocal) {
+      // ⚠️ 本地 WASM 缺失时必须把**全部** CDN 都作为候选。
+      // 原来这里只取 [WASM_BASES[0]]（cdn.jsdelivr.net），国内经常连不上 →
+      // FilesetResolver.forVisionTasks 永久 pending，界面卡在「姿势模型启动中」，
+      // 而且没有任何报错。真机踩过（2026-11-04）。
+      var bases = hasLocal ? [LOCAL_WASM_BASE].concat(WASM_BASES) : WASM_BASES.slice();
+      return localModelAvailable().then(function (hasModel) {
+        var modelUrl = hasModel ? LOCAL_MODEL : CDN_MODEL;
+        var attempt = function (i, delegate) {
+          if (i >= bases.length) {
+            var err = new Error('MediaPipe 初始化失败');
+            err.code = 'MODEL';
+            err.detail = 'WASM 或模型文件不可用';
+            throw err;
+          }
+          var base = bases[i];
+          state.backend.wasm = base;
+          state.backend.model = modelUrl;
+          if (state.starting) {
+            el.camState.textContent = '加载姿态模型（' + (hasModel ? '本地 5.5MB' : 'CDN') + '）…';
+          }
+          // createLandmarker 内部要 fetch WASM（约 9.5MB）+ 模型，网络卡住时会
+          // 永久 pending。必须加超时，否则界面永远停在「启动中」且不报错。
+          return withTimeout(
+            createLandmarker(mod, base, modelUrl, delegate), 25000, '姿态模型初始化'
+          ).then(function (lm) {
+            state.backend.delegate = delegate;
+            state.backend.wasm = base;
+            state.backend.model = modelUrl;
+            state.backend.assets = 'network-fallback';
+            return lm;
+          }).catch(function (e) {
+            console.warn('[MediaPipe] 初始化失败 base=' + base + ' delegate=' + delegate, e);
+            if (delegate === 'GPU') return attempt(i, 'CPU'); // 同一 base 先降级 CPU
+            return attempt(i + 1, 'GPU');
+          });
+        };
+        return attempt(0, 'GPU');
       });
     });
   }
@@ -745,43 +843,29 @@
   function ensureModel() {
     if (state.landmarker) return Promise.resolve(state.landmarker);
     if (state.modelPromise) return state.modelPromise;
-    state.modelPromise = loadModule()
-      .then(function (mod) {
-        return localWasmAvailable().then(function (hasLocal) {
-          // ⚠️ 本地 WASM 缺失时必须把**全部** CDN 都作为候选。
-          // 原来这里只取 [WASM_BASES[0]]（cdn.jsdelivr.net），国内经常连不上 →
-          // FilesetResolver.forVisionTasks 永久 pending，界面卡在「姿势模型启动中」，
-          // 而且没有任何报错。真机踩过（2026-11-04）。
-          var bases = hasLocal ? [LOCAL_WASM_BASE].concat(WASM_BASES) : WASM_BASES.slice();
-          return localModelAvailable().then(function (hasModel) {
-            var modelUrl = hasModel ? LOCAL_MODEL : CDN_MODEL;
-            var attempt = function (i, delegate) {
-              if (i >= bases.length) {
-                var err = new Error('MediaPipe 初始化失败');
-                err.code = 'MODEL';
-                err.detail = 'WASM 或模型文件不可用';
-                throw err;
-              }
-              var base = bases[i];
-              state.backend.wasm = base;
-              state.backend.model = modelUrl;
-              if (state.starting) {
-                el.camState.textContent = '加载姿态模型（' + (hasModel ? '本地 5.5MB' : 'CDN') + '）…';
-              }
-              // createLandmarker 内部要 fetch WASM（约 9.5MB）+ 模型，网络卡住时会
-              // 永久 pending。必须加超时，否则界面永远停在「启动中」且不报错。
-              return withTimeout(
-                createLandmarker(mod, base, modelUrl, delegate), 25000, '姿态模型初始化'
-              ).catch(function (e) {
-                console.warn('[MediaPipe] 初始化失败 base=' + base + ' delegate=' + delegate, e);
-                if (delegate === 'GPU') return attempt(i, 'CPU'); // 同一 base 先降级 CPU
-                return attempt(i + 1, 'GPU');
-              });
-            };
-            return attempt(0, 'GPU');
+
+    // 页面打开时 CGLoader 已经在预取；这里只是等同一个 Promise，不会重复下载。
+    if (window.CGLoader) {
+      window.CGLoader.onRetry = function () {
+        state.modelPromise = null;
+        // 用户已经在启动流程里失败过才自动重试；纯预取失败不弹摄像头权限
+        if (state.startAttempted && !state.running && !state.starting) startCamera();
+      };
+    }
+    var assetP = window.CGLoader ? window.CGLoader.ensure() : Promise.resolve(null);
+
+    state.modelPromise = assetP.then(function (assets) {
+      if (assets && assets.moduleUrl) state.assetModuleUrl = assets.moduleUrl;
+      return loadModule().then(function (mod) {
+        if (assets && assets.wasmJsUrl && assets.wasmBinUrl && assets.modelUrl) {
+          return initFromCachedAssets(mod, assets).catch(function (e) {
+            console.warn('[MediaPipe] 缓存资源路径失败，回退到源地址', e);
+            return initFromSources(mod);
           });
-        });
-      })
+        }
+        return initFromSources(mod);
+      });
+    })
       .then(function (lm) {
         state.landmarker = lm;
         updateRunInfo();
@@ -794,17 +878,6 @@
       });
     return state.modelPromise;
   }
-
-  // 记录真正生效的 delegate（attempt 递归里不好回传，这里根据 state 观察）
-  var _origCreate = createLandmarker;
-  createLandmarker = function (mod, wasmBase, modelUrl, delegate) {
-    return _origCreate(mod, wasmBase, modelUrl, delegate).then(function (lm) {
-      state.backend.delegate = delegate;
-      state.backend.wasm = wasmBase;
-      state.backend.model = modelUrl;
-      return lm;
-    });
-  };
 
   // ─────────────────────────── 摄像头 ───────────────────────────
   function openCamera(facing) {
@@ -972,6 +1045,7 @@
     }
     if (state.running) stop();
     ensureAudio();
+    state.startAttempted = true;
     state.starting = true;
     el.startBtn.disabled = true;
     el.camState.textContent = '正在请求摄像头权限…';
@@ -999,6 +1073,11 @@
       var msg = cameraErrorText(err);
       el.secureHint.textContent = msg;
       toast(msg, 'error', 9000);
+      // 资源 / 模型类失败：底部进度条切成「失败 + 重试」，不允许永远停在「启动中」
+      if (window.CGLoader && window.CGLoader.showError &&
+          (err.code === 'MODEL' || err.code === 'TIMEOUT' || err.code === 'ASSET')) {
+        window.CGLoader.showError(msg);
+      }
       updateRunInfo();
     }).then(function () {
       state.starting = false;
@@ -1817,6 +1896,7 @@
     stop: stop,
     flushStats: flushStats,
     get diag() { return state.backend; },
+    get assets() { return window.CGLoader ? window.CGLoader.stats : null; },
     get summary() {
       return {
         mode: state.mode,
